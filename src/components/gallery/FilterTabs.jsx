@@ -21,7 +21,7 @@ export default function FilterTabs({ category, setCategory, isSticky = false }) 
           : 'bg-white/10 '
       }`}>
         {/* Mobile: Horizontal scroll container */}
-        <div className="overflow-x-auto overflow-y-hidden  scrollbar-hide">
+        <div className="overflow-x-auto overflow-y-hidden  scrollbar-none">
           <div className="flex  gap-4 min-w-max md:min-w-0 md:justify-center">
             {categories.map((cat) => (
               <motion.button

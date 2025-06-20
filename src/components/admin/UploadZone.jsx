@@ -1,50 +1,63 @@
-'use client';
-import { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { motion } from 'framer-motion';
-import { bunnyUpload } from '@/lib/bunny';
+"use client";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { motion } from "framer-motion";
+import { bunnyUpload } from "@/lib/bunny";
 
 export default function UploadZone({ albumId, category }) {
   const [progressMap, setProgressMap] = useState({});
   const [statusMap, setStatusMap] = useState({});
   const [uploading, setUploading] = useState(false);
 
-  const onDrop = useCallback(async (acceptedFiles) => {
-    setUploading(true);
-    setProgressMap({});
-    setStatusMap({});
-    try {
-      const results = await bunnyUpload(
-        acceptedFiles,
-        albumId,
-        category,
-        (fileName, percent) => {
-          setProgressMap(prev => ({ ...prev, [fileName]: percent }));
-        }
-      );
-      // Update status for each file
-      const newStatus = {};
-      results.forEach(res => {
-        newStatus[res.fileName] = res.success ? 'Uploaded' : res.error || 'Failed';
-      });
-      setStatusMap(newStatus);
-    } catch (error) {
-      console.error('Upload failed:', error);
+  const onDrop = useCallback(
+    async (acceptedFiles) => {
+      setUploading(true);
+      setProgressMap({});
+      setStatusMap({});
+      try {
+        const results = await bunnyUpload(
+          acceptedFiles,
+          albumId,
+          category,
+          (fileName, percent) => {
+            setProgressMap((prev) => ({ ...prev, [fileName]: percent }));
+          }
+        );
+        // Update status for each file
+        const newStatus = {};
+        results.forEach((res) => {
+          newStatus[res.fileName] = res.success
+            ? "Uploaded"
+            : res.error || "Failed";
+        });
+        setStatusMap(newStatus);
+
+        handleReload(); // Reload the page to reflect new uploads
+      } catch (error) {
+        console.error("Upload failed:", error);
+      }
+      setUploading(false);
+    },
+    [albumId, category]
+  );
+
+  const handleReload = () => {
+    if (typeof window !== "undefined") {
+      window.location.reload();
     }
-    setUploading(false);
-  }, [albumId, category]);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {'image/*': ['.jpg', '.jpeg', '.png'], 'video/*': ['.mp4']},
-    multiple: true
+    accept: { "image/*": [".jpg", ".jpeg", ".png"], "video/*": [".mp4"] },
+    multiple: true,
   });
 
   return (
     <motion.div
       {...getRootProps()}
       className={`p-8 border-2 border-dashed rounded-xl ${
-        isDragActive ? 'border-gold bg-cream/50' : 'border-deep-purple'
+        isDragActive ? "border-gold bg-cream/50" : "border-deep-purple"
       }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -71,13 +84,17 @@ export default function UploadZone({ albumId, category }) {
                   />
                 </div>
                 {statusMap[file] && (
-                  <div className="text-xs mt-1 text-green-700">{statusMap[file]}</div>
+                  <div className="text-xs mt-1 text-green-700">
+                    {statusMap[file]}
+                  </div>
                 )}
               </div>
             ))}
           </div>
         )}
-        {uploading && <p className="mt-4 text-sm text-gray-500">Uploading...</p>}
+        {uploading && (
+          <p className="mt-4 text-sm text-gray-500">Uploading...</p>
+        )}
       </div>
     </motion.div>
   );

@@ -49,6 +49,7 @@ export default function EditAlbum() {
   const [album, setAlbum] = useState(null);
   const [media, setMedia] = useState([]);
   const [editing, setEditing] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
     name: "",
@@ -107,7 +108,6 @@ export default function EditAlbum() {
     setMedia(media.filter((m) => m.id !== mediaId));
   };
 
-  // Called after successful upload(s) from UploadZone
   const handleUploadComplete = async (uploadedFiles) => {
     if (!album) return;
     if (replaceMode && selectedCategory !== "all") {
@@ -161,8 +161,21 @@ export default function EditAlbum() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col py-8 px-6 fixed inset-y-0 left-0 z-30">
+      <aside className={`
+        w-64 bg-white border-r border-slate-200 flex flex-col py-8 px-6 
+        fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0 lg:static lg:z-30
+      `}>
         <div className="mb-12">
           <div className="flex items-center gap-3">
             <span className="text-2xl bg-indigo-600 text-white rounded-lg p-2">
@@ -177,6 +190,7 @@ export default function EditAlbum() {
           <Link
             href="/admin"
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-indigo-50 font-medium transition"
+            onClick={() => setSidebarOpen(false)}
           >
             <span>🏠</span>
             <span>Admin</span>
@@ -184,17 +198,42 @@ export default function EditAlbum() {
           <Link
             href="/admin/albums/create"
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-indigo-50 font-medium transition"
+            onClick={() => setSidebarOpen(false)}
           >
             <span>➕</span>
             <span>New Album</span>
+          </Link>
+          <Link
+            href="/admin/albums"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-indigo-50 font-medium transition"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <span>📚</span>
+            <span>All Albums</span>
           </Link>
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b border-slate-200">
+      <main className="flex-1">
+        {/* Mobile Header */}
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-slate-100 transition"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 className="text-lg font-bold text-slate-800 truncate mx-2">
+            {album.title}
+          </h1>
+          <div className="w-10"></div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden lg:block bg-white shadow-sm border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -228,37 +267,66 @@ export default function EditAlbum() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 lg:py-8">
+          {/* Mobile Status Card */}
+          <div className="lg:hidden bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-sm">
+                  📸
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Album ID</p>
+                  <p className="font-medium text-slate-800 text-sm">{album.name}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div
+                  className={`px-2 py-1 rounded-full text-xs font-medium mb-1 ${
+                    album.isActive
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {album.isActive ? "Active" : "Inactive"}
+                </div>
+                <div className="text-slate-500 text-xs">
+                  {media.length} files
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4 mb-6 lg:mb-8">
             {CATEGORIES.map((cat) => (
               <div
                 key={cat.value}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow"
+                className="bg-white rounded-lg lg:rounded-xl shadow-sm border border-slate-200 p-3 lg:p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div
-                    className={`w-10 h-10 rounded-lg ${cat.color} flex items-center justify-center text-white text-lg`}
+                    className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg ${cat.color} flex items-center justify-center text-white text-sm lg:text-lg`}
                   >
                     {cat.icon}
                   </div>
-                  <span className="text-2xl font-bold text-slate-800">
+                  <span className="text-lg lg:text-2xl font-bold text-slate-800">
                     {getMediaCount(cat.value)}
                   </span>
                 </div>
-                <p className="text-sm font-medium text-slate-600">
+                <p className="text-xs lg:text-sm font-medium text-slate-600">
                   {cat.label}
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Left Column - Settings & Upload */}
             <div className="lg:col-span-1 space-y-6">
               {/* Album Settings Card */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-                <div className="p-6 border-b border-slate-200">
+                <div className="p-4 lg:p-6 border-b border-slate-200">
                   <h2 className="text-lg font-semibold text-slate-800 flex items-center">
                     <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
                       ⚙️
@@ -266,14 +334,14 @@ export default function EditAlbum() {
                     Album Settings
                   </h2>
                 </div>
-                <div className="p-6">
+                <div className="p-4 lg:p-6">
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
                         Album Title
                       </label>
                       <input
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm lg:text-base"
                         value={form.title}
                         onChange={(e) =>
                           setForm({ ...form, title: e.target.value })
@@ -287,7 +355,7 @@ export default function EditAlbum() {
                         Slug
                       </label>
                       <input
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm lg:text-base"
                         value={form.name}
                         onChange={(e) =>
                           setForm({ ...form, name: e.target.value })
@@ -302,7 +370,7 @@ export default function EditAlbum() {
                       </label>
                       <input
                         type="password"
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm lg:text-base"
                         value={form.password}
                         onChange={(e) =>
                           setForm({ ...form, password: e.target.value })
@@ -331,7 +399,7 @@ export default function EditAlbum() {
                   </div>
                   <button
                     onClick={handleUpdate}
-                    className="w-full mt-6 bg-indigo-600 text-white px-4 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                    className="w-full mt-6 bg-indigo-600 text-white px-4 py-2 lg:py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 text-sm lg:text-base"
                     disabled={editing}
                   >
                     {editing ? (
@@ -348,7 +416,7 @@ export default function EditAlbum() {
 
               {/* Upload Card */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-                <div className="p-6 border-b border-slate-200">
+                <div className="p-4 lg:p-6 border-b border-slate-200">
                   <h2 className="text-lg font-semibold text-slate-800 flex items-center">
                     <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
                       📤
@@ -356,7 +424,7 @@ export default function EditAlbum() {
                     Upload Media
                   </h2>
                 </div>
-                <div className="p-6">
+                <div className="p-4 lg:p-6">
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -365,7 +433,7 @@ export default function EditAlbum() {
                       <select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        className="w-full px-3 lg:px-4 py-2 lg:py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm lg:text-base"
                       >
                         {CATEGORIES.filter((c) => c.value !== "all").map(
                           (cat) => (
@@ -407,7 +475,7 @@ export default function EditAlbum() {
             {/* Right Column - Media Gallery */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-                <div className="p-6 border-b border-slate-200">
+                <div className="p-4 lg:p-6 border-b border-slate-200">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-slate-800 flex items-center">
                       <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
@@ -420,14 +488,15 @@ export default function EditAlbum() {
                     </div>
                   </div>
                 </div>
+
                 {/* Category Filter Tabs */}
-                <div className="p-6 border-b border-slate-200">
+                <div className="p-4 lg:p-6 border-b border-slate-200">
                   <div className="flex flex-wrap gap-2">
                     {CATEGORIES.map((cat) => (
                       <button
                         key={cat.value}
                         onClick={() => setSelectedCategory(cat.value)}
-                        className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`inline-flex items-center space-x-1 lg:space-x-2 px-2 lg:px-4 py-1 lg:py-2 rounded-lg text-xs lg:text-sm font-medium transition-all ${
                           selectedCategory === cat.value
                             ? "bg-indigo-100 text-indigo-700 border-2 border-indigo-200"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-2 border-transparent"
@@ -435,9 +504,10 @@ export default function EditAlbum() {
                         type="button"
                       >
                         <span>{cat.icon}</span>
-                        <span>{cat.label}</span>
+                        <span className="hidden sm:inline">{cat.label}</span>
+                        <span className="sm:hidden">{cat.label.split(' ')[0]}</span>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          className={`px-1 lg:px-2 py-0.5 rounded-full text-xs font-semibold ${
                             selectedCategory === cat.value
                               ? "bg-indigo-200 text-indigo-800"
                               : "bg-slate-200 text-slate-600"
@@ -451,19 +521,19 @@ export default function EditAlbum() {
                 </div>
 
                 {/* Media Grid */}
-                <div className="p-6">
+                <div className="p-4 lg:p-6">
                   {filteredMedia.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
                       {filteredMedia.map((m) => (
-                        <div key={m.id} className="relative  group">
-                          <div className="">
+                        <div key={m.id} className="relative group">
+                          <div className="aspect-square overflow-hidden rounded-lg bg-slate-100">
                             {m.type === "photo" ? (
                               <Image
                                 src={m.url}
                                 alt={m.filename}
-                                width={400}
-                                height={600}
-                                className="w-full h-auto object-cover"
+                                width={200}
+                                height={200}
+                                className="w-full h-full object-cover"
                                 loading={"lazy"}
                                 placeholder="blur"
                                 blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
@@ -471,19 +541,20 @@ export default function EditAlbum() {
                             ) : (
                               <video
                                 src={m.url}
-                                controls
-                                className="w-full"
+                                className="w-full h-full object-cover"
+                                muted
+                                playsInline
                               />
                             )}
                             {/* Overlay */}
-                            <div className="absolute inset-0  bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
                               <button
                                 className="opacity-0 group-hover:opacity-100 bg-red-500 hover:bg-red-600 cursor-pointer text-white rounded-full p-2 transition-all duration-200 transform scale-90 group-hover:scale-100"
                                 onClick={() => handleDeleteMedia(m.id)}
                                 title="Delete file"
                               >
                                 <svg
-                                  className="w-4 h-4"
+                                  className="w-3 h-3 lg:w-4 lg:h-4"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -502,7 +573,7 @@ export default function EditAlbum() {
                           <div className="mt-2 px-1">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-slate-500 truncate flex-1 mr-2">
-                                {m.filename}
+                                {m.filename.length > 15 ? `${m.filename.substring(0, 15)}...` : m.filename}
                               </span>
                               <div className="flex items-center space-x-1 flex-shrink-0">
                                 <span

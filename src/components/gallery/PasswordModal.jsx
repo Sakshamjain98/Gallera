@@ -86,7 +86,7 @@ export default function PasswordModal({
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-[#F7CD38] to-[#F4C002] text-white py-4 rounded-xl font-serif text-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full cursor-pointer bg-gradient-to-r from-[#F7CD38] to-[#F4C002] text-white py-4 rounded-xl font-serif text-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
