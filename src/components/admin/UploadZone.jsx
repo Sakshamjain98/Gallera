@@ -1,21 +1,38 @@
-// components/admin/UploadZone.tsx
 'use client';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
 import { bunnyUpload } from '@/lib/bunny';
 
-export default function UploadZone({ albumId }) {
-  const [progress, setProgress] = useState(0);
+export default function UploadZone({ albumId, category }) {
+  const [progressMap, setProgressMap] = useState({});
+  const [statusMap, setStatusMap] = useState({});
+  const [uploading, setUploading] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles) => {
+    setUploading(true);
+    setProgressMap({});
+    setStatusMap({});
     try {
-      const results = await bunnyUpload(acceptedFiles, albumId);
-      // TODO: Add media entries to Firestore
+      const results = await bunnyUpload(
+        acceptedFiles,
+        albumId,
+        category,
+        (fileName, percent) => {
+          setProgressMap(prev => ({ ...prev, [fileName]: percent }));
+        }
+      );
+      // Update status for each file
+      const newStatus = {};
+      results.forEach(res => {
+        newStatus[res.fileName] = res.success ? 'Uploaded' : res.error || 'Failed';
+      });
+      setStatusMap(newStatus);
     } catch (error) {
       console.error('Upload failed:', error);
     }
-  }, [albumId]);
+    setUploading(false);
+  }, [albumId, category]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -39,14 +56,28 @@ export default function UploadZone({ albumId }) {
         ) : (
           <p>Drag & drop files or click to upload</p>
         )}
-        {progress > 0 && (
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
-            <div
-              className="bg-gold h-2.5 rounded-full"
-              style={{ width: `${progress}%` }}
-            />
+        {Object.keys(progressMap).length > 0 && (
+          <div className="mt-4 space-y-2">
+            {Object.entries(progressMap).map(([file, percent]) => (
+              <div key={file}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>{file}</span>
+                  <span>{percent}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    className="bg-gold h-2.5 rounded-full"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                {statusMap[file] && (
+                  <div className="text-xs mt-1 text-green-700">{statusMap[file]}</div>
+                )}
+              </div>
+            ))}
           </div>
         )}
+        {uploading && <p className="mt-4 text-sm text-gray-500">Uploading...</p>}
       </div>
     </motion.div>
   );
